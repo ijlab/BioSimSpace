@@ -42,14 +42,14 @@ __all__=['Lomap']
 
 
 try:
-    _lomap_exe = _sb.findExe("lomap").absoluteFilePath()
+    _lomap_exe = _SireBase.findExe("lomap").absoluteFilePath()
 except:
     _lomap_exe = None
 
 
 class Lomap(_task.Task):
 
-    def __init__(self, molecules, name='Lomap', work_dir=None, autostart=False):
+    def __init__(self, molecules, name='Lomap', work_dir=None, autostart=False, lomap_args=None, verbose=False):
         """Constructor
         
            Parameters
@@ -66,6 +66,12 @@ class Lomap(_task.Task):
            
            autostart : bool
                Whether to immediately start the task.
+        
+           lomap_args : str
+               Argument string for lomap, validity will not be checked
+
+           verbose : bool
+               Whether to print verbose output
         """
 
         
@@ -81,6 +87,7 @@ class Lomap(_task.Task):
             else:
                 self._isdir = True
         
+        # Test if molecule is a list of BioSimSpace._SireWrapper.Molecules
         elif type(molecules) is list and all(isinstance(x, _Molecule) for x in molecules):
            self._isdir = False
 
@@ -88,11 +95,19 @@ class Lomap(_task.Task):
             # TODO: expand error string
             raise TypeError("`molecules` must be a directory or list of `BioSimSpace._SireWrappers.Molecule`")
         self._molecules = molecules
-
+        
+        # Test if lomap args are a string
+        if lomap_args is None:
+            self._lomap_args = ['-o','-n temp'
+        if type(lomap_args) is str:
+            self._lomap_args = lomap_args.split(' ')
+        else:
+            raise TypeError("`lomap_args` needs to be a valid lomap arugment string, e.g.: `-t 100 -o -n out_name`"
 
     def _run(self):
         
-        print (self._isdir)
+        lomap_dir = None
+        
         # Write molecules to file for Lomap to read them
         if not self._isdir:
             for i,molecule in enumerate(self._molecules):
@@ -100,4 +115,21 @@ class Lomap(_task.Task):
 
                 # TODO mayb name them other than by molecule list index?
                 _IO.saveMolecules('%s/mol_%03d' % (self._work_dir,i), molecule, 'mol2')
+            lomap_dir = self._work_dir 
+        
+        else:
+            lomap_dir = molecules
+ 
+
+        if verbose:
+            print('Running lomap with arguments')
+            print(lomap_exe +' '+lomap_dir+' '+' '.join(self._lomap_args))
+        
+        p.run()
+        p.wait()
+        if p.isError():
+            # do Something
+            raise 
+        else:
+            # Analyse results
         return 'blub'
