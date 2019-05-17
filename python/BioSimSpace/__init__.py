@@ -118,7 +118,7 @@ if not _path.isdir(_gromacs_path):
         # Run the command.
         _proc = _subprocess.run(_command, shell=True, stdout=_subprocess.PIPE)
 
-        del _command 
+        del _command
 
         # Get the data prefix.
         if _proc.returncode == 0:
@@ -130,6 +130,11 @@ if not _path.isdir(_gromacs_path):
         del _path
         del _proc
         del _subprocess
+
+# Lazy import MDAnalyis and MDTraj.
+import lazy_import as _lazy_import
+_lazy_import.lazy_module("MDAnalyis")
+_lazy_import.lazy_module("mdtraj")
 
 from . import Align
 from . import FreeEnergy

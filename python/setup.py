@@ -69,24 +69,16 @@ finally:
         command = "%s/conda install -y -q -c rdkit rdkit" % bin_dir
         subprocess.run(command, shell=True, stdout=stdout, stderr=stderr)
 
-        print("Installing package: mdtraj")
-        command = "%s/conda install -y -q -c omnia mdtraj" % bin_dir
-        subprocess.run(command, shell=True, stdout=stdout, stderr=stderr)
-
-        print("Installing package: mdanalysis")
-        command = "%s/conda install -y -q mdanalysis" % bin_dir
-        subprocess.run(command, shell=True, stdout=stdout, stderr=stderr)
-
-        print("Installing package: rdkit")
-        command = "%s/conda install -y -q -c rdkit rdkit" % bin_dir
-        subprocess.run(command, shell=True, stdout=stdout, stderr=stderr)
-
         print("Upgrading pip")
         command = "%s/pip install --upgrade pip" % bin_dir
         subprocess.run(command, shell=True, stdout=stdout, stderr=stderr)
 
         print("Installing package: configargparse")
         command = "%s/pip install configargparse" % bin_dir
+        subprocess.run(command, shell=True, stdout=stdout, stderr=stderr)
+
+        print("Installing package: lazy_import")
+        command = "%s/pip install lazy_import" % bin_dir
         subprocess.run(command, shell=True, stdout=stdout, stderr=stderr)
 
         print("Installing package: pyyaml")
