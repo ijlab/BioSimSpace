@@ -23,6 +23,8 @@
 Base class for free energy simulations.
 """
 
+from collections import OrderedDict as _OrderedDict
+
 import math as _math
 import os as _os
 import subprocess as _subprocess
@@ -396,7 +398,7 @@ class FreeEnergy():
         return (leg0, leg1, free_energy)
 
     def _initialise_runner(self, system0, system1):
-        """Internral helper function to initialise the process runner.
+        """Internal helper function to initialise the process runner.
 
            Parameters
            ----------
@@ -432,18 +434,27 @@ class FreeEnergy():
         else:
             raise TypeError("Unsupported FreeEnergy simulation: '%s'" % sim_type)
 
-        # Try to get the water model property of the system.
-        try:
-            water_model = system0._sire_system.property("water_model").toString()
-        # Default to TIP3P.
-        except:
-            water_model = "tip3p"
-
         if self._engine == "SOMD":
-            # Reformat all of the water molecules so that they match the expected
-            # AMBER topology template. (Required by SOMD.)
-            waters0 = _SireIO.setAmberWater(system0._sire_system.search("water"), water_model)
-            waters1 = _SireIO.setAmberWater(system1._sire_system.search("water"), water_model)
+            # Try to get the name of the water model.
+            try:
+                water_model = system0._sire_system.property("water_model").toString()
+                waters0 = _SireIO.setAmberWater(system0._sire_system.search("water"), water_model)
+                waters1 = _SireIO.setAmberWater(system1._sire_system.search("water"), water_model)
+
+            except:
+                num_point = system0.getWaterMolecules()[0].nAtoms()
+
+                # Convert to an appropriate AMBER topology. (Required by SOMD.)
+                if num_point == 3:
+                    # TODO: Assume TIP3P. Not sure how to detect SPC/E.
+                    waters0 = _SireIO.setAmberWater(system0._sire_system.search("water"), "TIP3P")
+                    waters1 = _SireIO.setAmberWater(system1._sire_system.search("water"), "TIP3P")
+                elif num_point == 4:
+                    waters0 = _SireIO.setAmberWater(system0._sire_system.search("water"), "TIP4P")
+                    waters1 = _SireIO.setAmberWater(system1._sire_system.search("water"), "TIP4P")
+                elif num_point == 5:
+                    waters0 = _SireIO.setAmberWater(system0._sire_system.search("water"), "TIP5P")
+                    waters1 = _SireIO.setAmberWater(system1._sire_system.search("water"), "TIP5P")
 
             # Loop over all of the renamed water molecules, delete the old one
             # from the system, then add the renamed one back in.
@@ -469,16 +480,20 @@ class FreeEnergy():
 
             # SOMD.
             if self._engine == "SOMD":
-                # TODO: This is currently hard-coded to use SOMD with the CUDA platform.
+                # Check for GPU support.
+                if "CUDA_VISIBLE_DEVICES" in _os.environ:
+                    platform = "CUDA"
+                else:
+                    platform = "CPU"
+
                 leg0.append(_Process.Somd(system0, self._protocol,
-                    platform="CUDA", work_dir="%s/lambda_%5.4f" % (self._dir0, lam)))
+                    platform=platform, work_dir="%s/lambda_%5.4f" % (self._dir0, lam)))
 
                 leg1.append(_Process.Somd(system1, self._protocol,
-                    platform="CUDA", work_dir="%s/lambda_%5.4f" % (self._dir1, lam)))
+                    platform=platform, work_dir="%s/lambda_%5.4f" % (self._dir1, lam)))
 
             # GROMACS.
             elif self._engine == "GROMACS":
-                # TODO: This is currently hard-coded to use SOMD with the CUDA platform.
                 leg0.append(_Process.Gromacs(system0, self._protocol,
                     work_dir="%s/lambda_%5.4f" % (self._dir0, lam)))
 
@@ -488,3 +503,20 @@ class FreeEnergy():
         # Initialise the process runner. All processes have already been nested
         # inside the working directory so no need to re-nest.
         self._runner = _Process.ProcessRunner(leg0 + leg1, work_dir=self._work_dir, nest_dirs=False)
+
+    def _update_run_args(self, args):
+        """Internal function to update run arguments for all subprocesses.
+
+           Parameters
+           ----------
+
+           args : dict, collections.OrderedDict
+               A dictionary which contains the new command-line arguments
+               for the process executable.
+        """
+
+        if type(args) is not dict and type(args) is not _OrderedDict:
+            raise TypeError("'args' must be of type 'dict', or 'collections.OrderedDict'")
+
+        for process in self._runner.processes():
+            process.setArgs(args)
