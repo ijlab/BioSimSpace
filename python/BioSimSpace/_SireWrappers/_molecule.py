@@ -355,6 +355,16 @@ class Molecule(_SireWrapper):
 
         return _SearchResult(search_result)
 
+    def _getVirtualSiteDictionary(self):
+        """Generate a dictionary with the parameters of the virtual site."""
+        vsite_str = str(self._sire_object.property('virtual-sites')).replace("\n    ", "").replace("Properties(","").replace("\n)","").replace("=>", ":").split(',')
+        dic_vs = {}
+        for item in vsite_str:
+            mlk = item.split()
+            dic_vs.update({mlk[0] : mlk[2]})
+        
+        return dic_vs
+    
     def _getPropertyMap0(self):
         """Generate a property map for the lambda = 0 state of the merged molecule."""
 
@@ -735,6 +745,25 @@ class Molecule(_SireWrapper):
                atom.property("charge0") != atom.property("charge1"):
                 pert_idxs.append(atom.index())
 
+        # NEW NEW NEW NEW NEW NEW NEW 
+        mol0 = self._sire_object
+        mol1 = molecule
+        
+        if mol0.property("virtual-site")!= mol1.property("virtual-site"):
+          dic_vs0 = _getVirtualSiteDictionary(mol0)
+          dic_vs1 = _getVirtualSiteDictionary(mol1)
+        # #Find the perturbed Virtual Site index number 
+        # ind = []
+        # for keys in dic_vs0:
+        #   if dic_vs0[keys] != dic_vs1[keys]:
+        #     vs = keys[-2]
+        #     index = dic_vs0['index(%s)'%vs]
+        #     ind.append(index)
+        
+        # #Remove the index duplicates
+        # ind =  list(dict.fromkeys(ind))
+        # for i in range(0, len(ind)):
+        #   pert_idxs.append(ind[i])
         # The pert file uses atom names for identification purposes. This means
         # that the names must be unique. As such we need to count the number of
         # atoms with a particular name, then append an index to their name.
@@ -845,6 +874,29 @@ class Molecule(_SireWrapper):
             # Start molecule record.
             file.write("molecule LIG\n")
 
+            # 0) Virtual-sites
+            # Print all v-sites records.
+           
+            for i in range(0, len(dic_vs0)):
+
+                # Atom data.
+                file.write("        name           %s\n" % dic_vs0[%i]['name'])
+                file.write("        initial_charge %.5f\n" % dic_vs0[%i]['charge'])
+                file.write("        final_charge %.5f\n" % dic_vs1[%i]['charge'])
+                file.write("        initial_sigma %.5f\n" % dic_vs0[%i]['sigma'])
+                file.write("        final_sigma %.5f\n" % dic_vs1[%i]['sigma'])
+                file.write("        initial_epsilon %.5f\n" % dic_vs0[%i]['epsilon'])
+                file.write("        final_epsilon %.5f\n" % dic_vs1[%i]['epsilon'])
+                file.write("        initial_local_coordinate1 %.5f\n" % dic_vs0[%i]['p1'])
+                file.write("        final_local_coordinate1 %.5f\n" % dic_vs1[%i]['p1'])
+                file.write("        initial_local_coordinate2 %.5f\n" % dic_vs0[%i]['p2'])
+                file.write("        final_local_coordinate2 %.5f\n" % dic_vs1[%i]['p2'])
+                file.write("        initial_local_coordinate3 %.5f\n" % dic_vs0[%i]['p3'])
+                file.write("        final_local_coordinate3 %.5f\n" % dic_vs1[%i]['p3'])
+                # End virtual site record.
+                file.write("    endvirtual-site\n")
+                
+                
             # 1) Atoms.
 
             # Print all atom records.
