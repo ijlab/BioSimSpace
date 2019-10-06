@@ -488,7 +488,7 @@ def flexAlign(molecule0, molecule1, mapping=None, fkcombu_exe=None,
     return _Molecule(molecule0)
 
 def merge(molecule0, molecule1, mapping=None, allow_ring_breaking=False,
-        property_map0={}, property_map1={}):
+        allow_ring_size_change=False, property_map0={}, property_map1={}):
     """Create a merged molecule from 'molecule0' and 'molecule1' based on the
        atom index 'mapping'. The merged molecule can be used in single- and
        dual-toplogy free energy calculations.
@@ -552,8 +552,14 @@ def merge(molecule0, molecule1, mapping=None, allow_ring_breaking=False,
     if type(property_map0) is not dict:
         raise TypeError("'property_map0' must be of type 'dict'")
 
+    if type(allow_ring_breaking) is not bool:
+        raise TypeError("'allow_ring_breaking' must be of type 'bool'")
+
     if type(property_map1) is not dict:
         raise TypeError("'property_map1' must be of type 'dict'")
+
+    if type(allow_ring_size_change) is not bool:
+        raise TypeError("'allow_ring_size_change' must be of type 'bool'")
 
     # The user has passed an atom mapping.
     if mapping is not None:
@@ -573,7 +579,7 @@ def merge(molecule0, molecule1, mapping=None, allow_ring_breaking=False,
 
     # Create and return the merged molecule.
     return molecule0._merge(molecule1, sire_mapping, allow_ring_breaking=allow_ring_breaking,
-            property_map0=property_map0, property_map1=property_map1)
+            allow_ring_size_change=allow_ring_size_change, property_map0=property_map0, property_map1=property_map1)
 
 def _score_mappings(molecule0, molecule1, rdkit_molecule0, rdkit_molecule1,
         mcs_smarts, prematch, scoring_function, property_map0, property_map1):
