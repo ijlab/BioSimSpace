@@ -746,12 +746,16 @@ class Molecule(_SireWrapper):
                 pert_idxs.append(atom.index())
 
         # NEW NEW NEW NEW NEW NEW NEW 
-        mol0 = self._sire_object
-        mol1 = molecule
+        mol0 = self.molecule0()
+        mol1 = self.molecule1()
+        sire_mol0 = mol0._sire_object
+        sire_mol1 = mol1._sire_object
         
-        if mol0.property("virtual-site")!= mol1.property("virtual-site"):
-          dic_vs0 = _getVirtualSiteDictionary(mol0)
-          dic_vs1 = _getVirtualSiteDictionary(mol1)
+    #THIS WORKS ONLY WHEN BOTH OF THE MOLECULES HAVE VIRTUAL SITES
+        if sire_mol0.property("virtual-sites")!= sire_mol1.property("virtual-sites"):
+            dic_vs0 = mol0._getVirtualSiteDictionary()
+            dic_vs1 = mol1._getVirtualSiteDictionary()
+
         # #Find the perturbed Virtual Site index number 
         # ind = []
         # for keys in dic_vs0:
@@ -876,23 +880,23 @@ class Molecule(_SireWrapper):
 
             # 0) Virtual-sites
             # Print all v-sites records.
-           
-            for i in range(0, len(dic_vs0)):
+            nv_sites = int(dic_vs0['nvirtualsites'])
+            for i in range(0, nv_sites):
 
-                # Atom data.
-                file.write("        name           %s\n" % dic_vs0[%i]['name'])
-                file.write("        initial_charge %.5f\n" % dic_vs0[%i]['charge'])
-                file.write("        final_charge %.5f\n" % dic_vs1[%i]['charge'])
-                file.write("        initial_sigma %.5f\n" % dic_vs0[%i]['sigma'])
-                file.write("        final_sigma %.5f\n" % dic_vs1[%i]['sigma'])
-                file.write("        initial_epsilon %.5f\n" % dic_vs0[%i]['epsilon'])
-                file.write("        final_epsilon %.5f\n" % dic_vs1[%i]['epsilon'])
-                file.write("        initial_local_coordinate1 %.5f\n" % dic_vs0[%i]['p1'])
-                file.write("        final_local_coordinate1 %.5f\n" % dic_vs1[%i]['p1'])
-                file.write("        initial_local_coordinate2 %.5f\n" % dic_vs0[%i]['p2'])
-                file.write("        final_local_coordinate2 %.5f\n" % dic_vs1[%i]['p2'])
-                file.write("        initial_local_coordinate3 %.5f\n" % dic_vs0[%i]['p3'])
-                file.write("        final_local_coordinate3 %.5f\n" % dic_vs1[%i]['p3'])
+                # Atom data.// THIS WORKS JUST FOR ONE VIRTUAL SITE!! (0)
+                file.write("        name                        %s\n" % dic_vs0['name(0)'])
+                file.write("        initial_charge              %.5f\n" % dic_vs0['charge(0)'])
+                file.write("        final_charge                %.5f\n" % dic_vs1['charge(0)'])
+                file.write("        initial_sigma               %.5f\n" % dic_vs0['sigma(0)'])
+                file.write("        final_sigma                 %.5f\n" % dic_vs1['sigma(0)'])
+                file.write("        initial_epsilon             %.5f\n" % dic_vs0['epsilon(0)'])
+                file.write("        final_epsilon               %.5f\n" % dic_vs1['epsilon(0)'])
+                file.write("        initial_local_coordinate1   %.5f\n" % dic_vs0['p1(0)'])
+                file.write("        final_local_coordinate1     %.5f\n" % dic_vs1['p1(0)'])
+                file.write("        initial_local_coordinate2   %.5f\n" % dic_vs0['p2(0)'])
+                file.write("        final_local_coordinate2     %.5f\n" % dic_vs1['p2(0)'])
+                file.write("        initial_local_coordinate3   %.5f\n" % dic_vs0['p3(0)'])
+                file.write("        final_local_coordinate3     %.5f\n" % dic_vs1['p3(0)'])
                 # End virtual site record.
                 file.write("    endvirtual-site\n")
                 
